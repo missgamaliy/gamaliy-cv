@@ -1,0 +1,366 @@
+
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Посадка на CRM-рейс</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #ECEEF1;
+    color: #0a0a0a;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    padding: 56px 16px 96px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .email {
+    width: 600px;
+    --bg: #EAF3FB; --surface: #FFFFFF; --ink: #0A1A2A; --ink-soft: #16263A;
+    --muted: #5A6B7A; --border: #D7E5F2; --accent: #2563EB; --accent-strong: #1E40AF;
+    --tint: #DCEAFB;
+    --display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+    --body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+    --mono: ui-monospace, 'JetBrains Mono', 'IBM Plex Mono', Menlo, monospace;
+    background: var(--bg); color: var(--ink);
+    box-shadow: 0 12px 40px -16px rgba(20, 30, 50, 0.18), 0 2px 8px rgba(20,30,50,0.06);
+    overflow: hidden; border-radius: 6px;
+  }
+  .email * { font-family: var(--body); }
+
+  .banner { position: relative; padding: 36px 40px 56px; overflow: hidden; isolation: isolate;
+    background: linear-gradient(160deg, #2F73EE 0%, #1746B5 100%); }
+  .banner .crm-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .banner .crm-lines path, .banner .crm-lines circle { stroke: rgba(255,255,255,0.55); }
+  .banner .crm-lines .dot { fill: rgba(255,255,255,0.85); }
+
+  .banner-head {
+    position: relative; z-index: 2;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; font-variant-numeric: tabular-nums;
+    color: rgba(255,255,255,0.92);
+  }
+  .banner-head .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+  .banner-head .brand .glyph { width: 16px; height: 16px; display: inline-block; border-radius: 3px; background: #FFFFFF; }
+  .banner-head .row { display: inline-flex; gap: 18px; }
+  .banner-head .row b { font-weight: 600; opacity: 0.55; margin-right: 6px; }
+
+  .banner-headline {
+    position: relative; z-index: 2; margin: 18px 0 0;
+    font-family: var(--display); font-weight: 700;
+    font-size: 56px; line-height: 0.96; letter-spacing: -0.02em;
+    text-wrap: balance; max-width: 460px; color: #FFFFFF;
+  }
+
+  .pass-wrap { position: relative; z-index: 2; margin-top: 30px; display: flex; justify-content: center; perspective: 800px; }
+  .pass {
+    position: relative; width: 480px;
+    background: #FFFFFF; color: #0e0e0e; border-radius: 12px;
+    box-shadow: 0 24px 60px -28px rgba(10,20,40,0.55), 0 4px 18px rgba(10,20,40,0.18);
+    transform: rotate(-1.4deg); overflow: hidden;
+  }
+
+  .pass-strip {
+    background: #0A1A2A; color: #ffffff;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    padding: 9px 20px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .pass-strip .strip-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+  .pass-strip .strip-brand .lozenge { width: 14px; height: 9px; background: var(--accent); border-radius: 1px; display: inline-block; }
+
+  .pass-body { position: relative; display: grid; grid-template-columns: 1fr 116px; }
+  .pass-body::before {
+    content: ""; position: absolute; top: 12px; bottom: 12px;
+    left: calc(100% - 116px); width: 0;
+    border-left: 1.5px dashed rgba(0,0,0,0.22); pointer-events: none;
+  }
+  .pass-main { padding: 16px 20px 18px; }
+  .pass-stub { padding: 16px 14px 18px; background: #F8F8F6; display: flex; flex-direction: column; }
+
+  .pass-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
+  .pass-field { min-width: 0; }
+  .pass-field .label {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: #888; margin-bottom: 3px;
+  }
+  .pass-field .value {
+    font-family: var(--display); font-weight: 700;
+    font-size: 22px; line-height: 1.05; letter-spacing: -0.01em; color: #0e0e0e;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pass-field .value.s { font-size: 14px; font-family: var(--body); font-weight: 600; letter-spacing: 0; }
+
+  .pass-row {
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px dashed rgba(0,0,0,0.14);
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px;
+  }
+
+  .pass-stub .stub-label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: #888; margin-bottom: 3px;
+  }
+  .pass-stub .stub-value {
+    font-family: var(--display); font-weight: 700;
+    font-size: 16px; line-height: 1; color: #0e0e0e;
+  }
+  .pass-stub .barcode {
+    margin-top: auto; height: 64px; width: 100%;
+    background:
+      repeating-linear-gradient(
+        to right,
+        #0e0e0e 0, #0e0e0e 1.5px, #fff 1.5px, #fff 3px,
+        #0e0e0e 3px, #0e0e0e 4.5px, #fff 4.5px, #fff 8px,
+        #0e0e0e 8px, #0e0e0e 9px, #fff 9px, #fff 11px
+      );
+  }
+  .pass-stub .stub-foot {
+    margin-top: 6px; font-family: var(--mono); font-size: 8.5px;
+    letter-spacing: 0.18em; text-transform: uppercase; color: #888; text-align: center;
+  }
+
+  .block-intro { padding: 48px 56px 32px; background: var(--bg); color: var(--ink); }
+  .block-intro .hello {
+    margin: 0 0 12px; font-family: var(--display); font-weight: 700;
+    font-size: 36px; line-height: 1; letter-spacing: -0.02em;
+  }
+  .block-intro .hello .wave { display: inline-block; transform: translateY(-2px); margin-left: 4px; }
+  .block-intro .lead {
+    margin: 0; font-size: 17px; line-height: 1.55; color: var(--ink-soft); max-width: 44ch;
+  }
+  .block-intro .lead b { font-weight: 600; }
+  .block-intro .lead .accent {
+    background: linear-gradient(180deg, transparent 65%, var(--accent) 65%);
+    padding: 0 2px; color: var(--ink-soft);
+  }
+
+  .block-skills { padding: 8px 56px 40px; background: var(--bg); }
+  .eyebrow {
+    display: flex; align-items: center; gap: 14px;
+    font-family: var(--display); font-weight: 700;
+    font-size: 28px; line-height: 1; letter-spacing: -0.015em;
+    color: var(--ink); margin: 28px 0 22px;
+  }
+  .eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--border); display: block; }
+
+  .skills-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+  .skills-list li {
+    display: grid; grid-template-columns: 44px 1fr; gap: 16px;
+    padding: 18px 0; border-bottom: 1px solid var(--border); align-items: start;
+  }
+  .skills-list li .ico {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 17px; line-height: 1; flex: 0 0 auto;
+  }
+  .skills-list li.ok .ico { background: var(--accent); color: #FFFFFF; }
+  .skills-list li.ok .ico::before {
+    content: ""; width: 14px; height: 8px;
+    border-left: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor;
+    transform: rotate(-45deg) translate(1px, -2px); display: block;
+  }
+  .skills-list li.surprise .ico, .skills-list li.smart .ico {
+    background: var(--tint); border: 1px solid var(--border);
+  }
+  .skills-list li .text { font-size: 15.5px; line-height: 1.5; color: var(--ink-soft); }
+  .skills-list li .text .lead {
+    display: block; font-weight: 600; color: var(--ink);
+    margin-bottom: 2px; font-size: 15.5px;
+  }
+  .skills-list li .text em { font-style: normal; color: var(--ink); font-weight: 600; }
+
+  .more-line {
+    margin: 26px 0 4px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    font-size: 15px; color: var(--ink-soft);
+  }
+  .more-line a {
+    color: var(--ink); text-decoration: none; font-weight: 600;
+    border-bottom: 2px solid var(--accent); padding-bottom: 1px;
+  }
+  .more-line a:hover { color: var(--accent-strong); }
+
+  .brands { margin-top: 28px; padding-top: 26px; border-top: 1px solid var(--border); }
+  .brands .label { font-size: 14px; color: var(--muted); margin: 0 0 12px; }
+  .brands .label b { color: var(--ink); font-weight: 600; }
+  .brand-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .brand-chips span {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 12px 8px; border: 1px solid var(--border);
+    border-radius: 999px; background: var(--surface);
+    font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+  .brand-chips span::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); display: inline-block;
+  }
+
+  .email-foot {
+    padding: 26px 56px 36px; background: var(--bg); color: var(--muted);
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .email-foot .left { display: inline-flex; align-items: center; gap: 8px; }
+  .email-foot .lozenge { width: 14px; height: 9px; background: var(--accent); border-radius: 1px; display: inline-block; }
+</style>
+</head>
+<body>
+
+<article class="email">
+
+  <header class="banner">
+    <svg class="crm-lines" viewBox="0 0 600 360" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M -10 80 Q 150 10, 320 90 T 620 60" fill="none" stroke-width="1.5" stroke-dasharray="2 6"/>
+      <path d="M -10 280 Q 200 220, 380 290 T 620 230" fill="none" stroke-width="1.5" stroke-dasharray="2 6"/>
+      <path d="M 80 -10 Q 130 90, 60 200 T 110 380" fill="none" stroke-width="1.2" stroke-dasharray="2 5"/>
+      <circle class="dot" cx="50" cy="92" r="2.2"/>
+      <circle class="dot" cx="280" cy="78" r="2.2"/>
+      <circle class="dot" cx="540" cy="70" r="2.2"/>
+      <circle class="dot" cx="120" cy="262" r="2.2"/>
+      <circle class="dot" cx="450" cy="278" r="2.2"/>
+    </svg>
+
+    <div class="banner-head">
+      <span class="brand"><i class="glyph"></i>CRM AIRLINES</span>
+      <span class="row"><span><b>FLT</b> CRM-247</span><span><b>GATE</b> A/B</span></span>
+    </div>
+
+    <h1 class="banner-headline">Посадка на<br/>CRM-рейс</h1>
+
+    <div class="pass-wrap">
+      <div class="pass">
+        <div class="pass-strip">
+          <span class="strip-brand"><i class="lozenge"></i>CRM AIRLINES &middot; BOARDING PASS</span>
+          <span>2026</span>
+        </div>
+
+        <div class="pass-body">
+          <div class="pass-main">
+            <div class="pass-fields">
+              <div class="pass-field">
+                <div class="label">Passenger / Имя</div>
+                <div class="value">Настя</div>
+              </div>
+              <div class="pass-field">
+                <div class="label">Flight / Рейс</div>
+                <div class="value">CRM-247</div>
+              </div>
+
+              <div class="pass-field">
+                <div class="label">From / Откуда</div>
+                <div class="value s">Ростов-на-Дону</div>
+              </div>
+              <div class="pass-field">
+                <div class="label">To / Куда</div>
+                <div class="value">Aviasales</div>
+              </div>
+            </div>
+
+            <div class="pass-row">
+              <div class="pass-field">
+                <div class="label">Row &middot; Ряд</div>
+                <div class="value s">«аналитика»</div>
+              </div>
+              <div class="pass-field">
+                <div class="label">Seat &middot; Место</div>
+                <div class="value s">«мемы»</div>
+              </div>
+              <div class="pass-field">
+                <div class="label">Boarding</div>
+                <div class="value s">сейчас &rarr;</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pass-stub">
+            <div class="stub-label">Boarding pass</div>
+            <div class="stub-value">CRM&middot;247</div>
+            <div class="barcode" aria-hidden="true"></div>
+            <div class="stub-foot">2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="block-intro">
+    <h2 class="hello">Привет<span class="wave">!</span></h2>
+    <p class="lead">
+      Меня зовут <b>Настя</b>, в&nbsp;<span class="accent">CRM-маркетинге</span> я&nbsp;уже почти 2&nbsp;года.
+    </p>
+  </section>
+
+  <section class="block-skills">
+    <span class="eyebrow">Что уже умею</span>
+
+    <ul class="skills-list">
+      <li class="ok">
+        <span class="ico" aria-hidden="true"></span>
+        <span class="text">
+          <span class="lead">Создавать рассылки, которые помогают пользователю, живут с&nbsp;ним на&nbsp;одной волне и&nbsp;настроении</span>
+        </span>
+      </li>
+      <li class="ok">
+        <span class="ico" aria-hidden="true"></span>
+        <span class="text">
+          <span class="lead">Работать с&nbsp;большими базами и&nbsp;поведением</span>
+          Убираю неэффективное, масштабирую то, что реально полезно пользователю и&nbsp;продукту.
+        </span>
+      </li>
+      <li class="ok">
+        <span class="ico" aria-hidden="true"></span>
+        <span class="text">
+          <span class="lead">Тестировать гипотезы и&nbsp;проводить <em>A/B-тесты</em></span>
+        </span>
+      </li>
+      <li class="ok">
+        <span class="ico" aria-hidden="true"></span>
+        <span class="text">
+          <span class="lead">Говорить на&nbsp;языке мемов и&nbsp;репа</span>
+          Креатив в&nbsp;рамках продукта&nbsp;— чтобы письмо звучало живым голосом, а&nbsp;не&nbsp;шаблоном.
+        </span>
+      </li>
+      <li class="smart">
+        <span class="ico" aria-hidden="true">🤓</span>
+        <span class="text">
+          <span class="lead">Внимательность повышенного левела</span>
+          Заканчиваю юридический факультет&nbsp;— ориентируюсь в&nbsp;рисках в&nbsp;сфере рекламы.
+          Учитываю это ещё на&nbsp;этапе создания коммуникации или дабл-чекаю, когда нужно быстро и&nbsp;круто поддержать инфоповод.
+        </span>
+      </li>
+    </ul>
+
+    <div class="more-line">
+      <span>Больше обо мне здесь&nbsp;—</span>
+      <a href="https://rostov.hh.ru/resume/6122270eff0da10c260039ed1f544a4d7a6958" target="_blank" rel="noopener">тыкс &rarr;</a>
+    </div>
+
+    <div class="brands">
+      <p class="label"><b>Нравятся email-рассылки брендов:</b></p>
+      <div class="brand-chips">
+        <span>Invisible</span>
+        <span>Золотое яблоко</span>
+        <span>Бургер Кинг</span>
+        <span>ВкусВилл</span>
+      </div>
+    </div>
+  </section>
+
+  <footer class="email-foot">
+    <span class="left"><i class="lozenge"></i>CRM AIRLINES</span>
+    <span>Boarding &middot; 2026</span>
+  </footer>
+
+</article>
+
+</body>
+</html>
